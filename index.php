@@ -5,7 +5,7 @@ $con = mysqli_connect("localhost", "root", "", "task4");
 if (!$con) {
     die("Database connection error");
 }
-$msg = $msg_login =  "";
+$msg = $classMsg = $msg_login =  "";
 
 if(isset($_POST['log_submit'])){
     $email = $_POST['email'];
@@ -19,7 +19,8 @@ if(isset($_POST['log_submit'])){
         exit;
     }
     else {
-        $msg_login = '<div class="msg_error">Email or password incorect</div>';
+        $classMsg = "msg_error";
+        $msg_login = "Email or password incorect";
     }
 }
 
@@ -40,24 +41,28 @@ if(isset($_POST['reg_submit'])){
         $gender == ""
     )
     {
-        $msg = '<div class="msg_error">Fields are empty</div>';
+        $classMsg = "msg_error";
+        $msg = "Fields are empty";
     }
     else if($password != $conpassword){
-        $msg = '<div class="msg_error">Password no correct</div>';
+        $classMsg = "msg_error";
+        $msg = "Password no correct";
     }
     else{
         $query_email = mysqli_query($con, "SELECT email FROM registration WHERE email = '$email'");
         $fetch = mysqli_fetch_assoc($query_email);
         $num_rows = mysqli_num_rows($query_email);
         if($num_rows > 0){
-            $msg = '<div class="msg_error">Email already exists</div>';
+            $classMsg = "msg_error";
+            $msg = "Email already exists";
         }
         else{
             $password=password_hash($password,PASSWORD_DEFAULT);
             $query_insert=mysqli_query($con,"INSERT INTO registration(name,surname,email,password,gender) VALUES('$name','$surname','$email','$password','$gender')");
             if($query_insert){
                 $_POST="";
-                $msg = '<div class="msg_completed">Registration successful</div>';
+                $classMsg = "msg_completed";
+                $msg = "Registration successful";
             }
         }
     }
@@ -97,7 +102,11 @@ if(isset($_POST['reg_submit'])){
                         <label><input type="radio" name="gender" value="female" <?= (isset($_POST['gender']) && $_POST['gender'] === 'female') ? 'checked' : '' ?>> Female</label>
                     </div>
                     <button type="submit" name="reg_submit" class="btn_submit">Submit</button>
-                    <?= $msg ?>
+                    <?php if(!empty($msg)) : ?>
+                        <div class="<?= $classMsg ?>">
+                            <?= $msg ?>
+                        </div>
+                    <?php endif; ?>
                 </form>
             </div>
             <div class="login_div">
@@ -110,7 +119,11 @@ if(isset($_POST['reg_submit'])){
                     <label class="labels">password:</label>
                     <input type="password" placeholder="password" name="password" class="inputs">
                     <button type="submit" name="log_submit" class="btn_submit">Login</button>
-                    <?= $msg_login ?>
+                    <?php if(!empty($msg_login)) : ?>
+                        <div class="<?= $classMsg ?>">
+                            <?= $msg_login ?>
+                        </div>
+                    <?php endif; ?>
                 </form>
             </div>
         </div>
