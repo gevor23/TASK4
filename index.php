@@ -1,26 +1,37 @@
 <?php
 
 session_start();
+
 $con = mysqli_connect("localhost", "root", "", "task4");
 if (!$con) {
     die("Database connection error");
 }
 $msg = $classMsg = $msg_login =  "";
 
-if(isset($_POST['log_submit'])){
+if (isset($_POST['log_submit'])) {
+
     $email = $_POST['email'];
     $password = $_POST['password'];
-    $query_user = mysqli_query($con, "SELECT id, email, password FROM registration WHERE email = '$email'");
-    $fetch_user = mysqli_fetch_assoc($query_user);
+
+    $stmt = mysqli_prepare(
+            $con,
+            "SELECT id, email, password FROM registration WHERE email = ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+    $fetch_user = mysqli_fetch_assoc($result);
+
     if ($fetch_user && password_verify($password, $fetch_user['password'])) {
         $_SESSION['id'] = $fetch_user['id'];
         $_SESSION['email'] = $fetch_user['email'];
         header("Location: home.php");
         exit;
-    }
-    else {
+    } else {
         $classMsg = "msg_error";
-        $msg_login = "Email or password incorect";
+        $msg_login = "Email or password incorrect";
     }
 }
 
@@ -49,17 +60,19 @@ if(isset($_POST['reg_submit'])){
         $msg = "Password no correct";
     }
     else{
-        $query_email = mysqli_query($con, "SELECT email FROM registration WHERE email = '$email'");
-        $fetch = mysqli_fetch_assoc($query_email);
-        $num_rows = mysqli_num_rows($query_email);
-        if($num_rows > 0){
+        $stmt = mysqli_prepare($con,"SELECT email FROM registration WHERE email=?");
+        mysqli_stmt_bind_param($stmt, "s", $email);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if(mysqli_num_rows($result) > 0){
             $classMsg = "msg_error";
             $msg = "Email already exists";
         }
         else{
-            $password=password_hash($password,PASSWORD_DEFAULT);
-            $query_insert=mysqli_query($con,"INSERT INTO registration(name,surname,email,password,gender) VALUES('$name','$surname','$email','$password','$gender')");
-            if($query_insert){
+            $hashedPassword=password_hash($password,PASSWORD_DEFAULT);
+            $stmt = mysqli_prepare($con,"INSERT INTO registration (name, surname, email, password, gender) VALUES (?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "sssss", $name, $surname, $email, $hashedPassword, $gender);
+            if(mysqli_stmt_execute($stmt)){
                 $_POST="";
                 $classMsg = "msg_completed";
                 $msg = "Registration successful";
