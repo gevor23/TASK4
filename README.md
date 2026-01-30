@@ -1,1 +1,2 @@
-By php, I have registration and login forms, when user registers his data check in db, and he can acces his page: 
+A PHP-based project with registration and login functionality. 
+User data is verified in the database during registration, and registered users can access their personal page.
